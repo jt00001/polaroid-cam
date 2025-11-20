@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI Navigation | 未来 AI 工具库</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- 引入 FontAwesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#050505',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        'glass-hover': 'rgba(255, 255, 255, 0.06)',
+                        neon: {
+                            blue: '#00f3ff',
+                            purple: '#bc13fe',
+                            green: '#0aff68',
+                            red: '#ff003c',
+                            yellow: '#ffd700',
+                            pink: '#ff00ff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- 全局设置 --- */
+        body {
+            background-color: #050505;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(188, 19, 254, 0.06), transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.06), transparent 20%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* --- 滚动条美化 --- */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* --- 玻璃拟态卡片 --- */
+        .glass-card {
+            background: rgba(20, 20, 20, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            position: relative;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: block;
+            /* 确保 a 标签表现为块级元素 */
+        }
+
+        /* 渐变边框 */
+        .glass-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.01) 50%, rgba(255, 255, 255, 0.05));
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .glass-card:hover::before {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        /* 选中/高亮状态 */
+        .glass-card.featured::before {
+            background: linear-gradient(135deg, #00f3ff, transparent 60%, #bc13fe);
+        }
+
+        /* --- 霓虹文字 --- */
+        .text-glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .glow-blue {
+            text-shadow: 0 0 12px rgba(0, 243, 255, 0.6);
+        }
+
+        .glow-purple {
+            text-shadow: 0 0 12px rgba(188, 19, 254, 0.6);
+        }
+
+        .glow-green {
+            text-shadow: 0 0 12px rgba(10, 255, 104, 0.4);
+        }
+
+        /* --- 标签胶囊 --- */
+        .tag {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+        }
+
+        /* --- 侧边栏导航 --- */
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease;
+            color: #64748b;
+            border-left: 2px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), transparent);
+            border-left-color: #00f3ff;
+        }
+
+        .nav-item.active i {
+            color: #00f3ff;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
+        }
+
+        /* --- 搜索框聚焦光效 --- */
+        .search-focus:focus-within {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            border-color: rgba(0, 243, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body class="h-screen flex font-sans text-sm overflow-hidden">
+
+    <!-- 侧边栏 -->
+    <aside
+        class="w-64 hidden md:flex flex-col border-r border-white/5 bg-obsidian/90 backdrop-blur-xl z-20 flex-shrink-0">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-8 border-b border-white/5">
+            <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-blue to-neon-purple flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(188,19,254,0.5)]">
+                <i class="fa-solid fa-brain text-white text-sm"></i>
+            </div>
+            <span class="text-lg font-bold tracking-wide text-white">NEXUS AI</span>
+        </div>
+
+        <!-- 导航菜单 -->
+        <nav class="flex-1 py-6 overflow-y-auto custom-scrollbar">
+            <div class="px-6 mb-2 text-[10px] font-medium text-slate-600 uppercase tracking-wider">Discover</div>
+            <a href="#featured" class="nav-item active flex items-center px-6 py-3 group"
+                onclick="scrollToSection('featured')">
+                <i class="fa-solid fa-fire w-6 group-hover:text-neon-red transition"></i>
+                <span>热门推荐</span>
+            </a>
+            <a href="#new" class="nav-item flex items-center px-6 py-3 group" onclick="scrollToSection('featured')">
+                <i class="fa-solid fa-bolt w-6 group-hover:text-neon-yellow transition"></i>
+                <span>最新收录</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-2 text-[10px] font-medium text-slate-600 uppercase tracking-wider">Categories</div>
+
+            <a href="#chat" class="nav-item flex items-center px-6 py-3 group" onclick="scrollToSection('chat')">
+                <i class="fa-regular fa-comments w-6 group-hover:text-neon-blue transition"></i>
+                <span>对话 & 写作</span>
+            </a>
+            <a href="#image" class="nav-item flex items-center px-6 py-3 group" onclick="scrollToSection('image')">
+                <i class="fa-solid fa-palette w-6 group-hover:text-neon-purple transition"></i>
+                <span>图像 & 设计</span>
+            </a>
+            <a href="#code" class="nav-item flex items-center px-6 py-3 group" onclick="scrollToSection('code')">
+                <i class="fa-solid fa-code w-6 group-hover:text-neon-blue transition"></i>
+                <span>编程 & 开发</span>
+            </a>
+        </nav>
+
+        <!-- 底部用户 -->
+        <div class="p-4 border-t border-white/5">
+            <div class="glass-card p-3 flex items-center cursor-pointer hover:bg-white/5 transition">
+                <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-xs font-bold text-white">提交工具</p>
+                    <p class="text-[10px] text-slate-500">Join the community</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-obsidian">
+        <!-- 顶部光晕装饰 -->
+        <div
+            class="absolute top-[-20%] left-[30%] w-[800px] h-[800px] bg-neon-purple/5 rounded-full blur-[120px] pointer-events-none">
+        </div>
+        <div
+            class="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-neon-blue/5 rounded-full blur-[100px] pointer-events-none">
+        </div>
+
+        <!-- 顶部栏 -->
+        <header
+            class="h-20 flex items-center justify-between px-8 z-10 border-b border-white/5 bg-obsidian/80 backdrop-blur-md">
+            <div class="flex items-center md:hidden">
+                <button class="text-white"><i class="fa-solid fa-bars text-xl"></i></button>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="flex-1 max-w-2xl mx-auto relative px-4">
+                <div class="relative group search-focus rounded-xl transition duration-300">
+                    <input type="text" placeholder="Search 2,000+ AI tools..."
+                        class="w-full h-12 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:bg-obsidian transition">
+                    <i
+                        class="fa-solid fa-search absolute left-4 top-4 text-slate-500 group-hover:text-neon-blue transition"></i>
+                    <div class="absolute right-3 top-3 flex items-center space-x-2">
+                        <span class="px-2 py-1 rounded border border-white/10 text-[10px] text-slate-500 bg-white/5">⌘
+                            K</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-4">
+                <button
+                    class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/30 transition">
+                    <i class="fa-brands fa-github"></i>
+                </button>
+                <button
+                    class="px-4 py-2 rounded-lg bg-white text-black font-bold text-xs hover:bg-neon-blue hover:shadow-[0_0_15px_rgba(0,243,255,0.5)] transition duration-300">
+                    Login
+                </button>
+            </div>
+        </header>
+
+        <!-- 滚动内容区 -->
+        <div id="content-scroll" class="flex-1 overflow-y-auto p-6 md:p-10 z-10 custom-scrollbar scroll-smooth">
+
+            <!-- Featured Hero Section -->
+            <section id="featured" class="mb-12">
+                <div class="flex items-center mb-6">
+                    <i class="fa-solid fa-star text-neon-yellow mr-2 animate-pulse"></i>
+                    <h2 class="text-xl font-bold text-white">Featured Tools</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Hero Card 1 (Midjourney) -->
+                    <a href="https://www.midjourney.com" target="_blank"
+                        class="glass-card featured p-6 col-span-1 lg:col-span-2 flex flex-col justify-end min-h-[240px] overflow-hidden group cursor-pointer">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10">
+                        </div>
+                        <!-- Bg Image Placeholder -->
+                        <div
+                            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center group-hover:scale-105 transition duration-700 opacity-60">
+                        </div>
+
+                        <div class="relative z-20">
+                            <div class="flex items-center mb-2">
+                                <span
+                                    class="bg-neon-purple text-white text-[10px] font-bold px-2 py-0.5 rounded mr-2">Top
+                                    Pick</span>
+                                <span class="text-neon-blue text-xs font-medium"><i
+                                        class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generative Art</span>
+                            </div>
+                            <h3 class="text-3xl font-bold text-white mb-2 group-hover:text-neon-blue transition">
+                                Midjourney V6</h3>
+                            <p class="text-slate-300 text-sm max-w-lg mb-4">Create hyper-realistic images with the most
+                                advanced AI art generator. Now featuring improved text rendering and finer details.</p>
+                            <div class="flex space-x-2">
+                                <span
+                                    class="px-4 py-2 rounded bg-white/10 hover:bg-neon-purple hover:text-white text-white text-xs font-bold border border-white/10 transition backdrop-blur-md">Visit
+                                    Site <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Hero Card 2 (ChatGPT) -->
+                    <a href="https://chat.openai.com" target="_blank"
+                        class="glass-card p-6 flex flex-col justify-between group cursor-pointer">
+                        <div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-green-900/30 border border-green-500/30 flex items-center justify-center mb-4 text-neon-green text-xl">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-1">ChatGPT-4o</h3>
+                            <p class="text-slate-400 text-xs">OpenAI's latest flagship model with audio, vision, and
+                                text capabilities in real-time.</p>
+                        </div>
+                        <div class="mt-4">
+                            <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-2">
+                                <div class="h-full bg-neon-green w-[95%] shadow-[0_0_8px_#0aff68]"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-500">
+                                <span>Popularity</span>
+                                <span class="text-neon-green">9.9/10</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Chat & Writing Grid -->
+            <section id="chat" class="mb-12">
+                <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-neon-blue mr-3 shadow-[0_0_8px_#00f3ff]"></span>
+                            Chat & Writing
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Large language models and writing assistants</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Card 1 -->
+                    <a href="https://claude.ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-2xl">🤖
+                            </div>
+                            <div
+                                class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-400">
+                                Free</div>
+                        </div>
+                        <h4 class="text-white font-bold mb-1 group-hover:text-neon-blue transition">Claude 3.5 Sonnet
+                        </h4>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">Anthropic's most balanced model. Great for
+                            coding and nuanced writing.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">LLM</span>
+                            <span class="tag">Coding</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 2 -->
+                    <a href="https://www.jasper.ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-purple-900/20 flex items-center justify-center text-2xl">
+                                ✨</div>
+                            <div
+                                class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-400">
+                                Freemium</div>
+                        </div>
+                        <h4 class="text-white font-bold mb-1 group-hover:text-neon-purple transition">Jasper AI</h4>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">AI copywriter and content generator for
+                            teams and marketers.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Marketing</span>
+                            <span class="tag">Copy</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 3 -->
+                    <a href="https://www.notion.so/product/ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-900/20 flex items-center justify-center text-2xl">
+                                📝</div>
+                            <div
+                                class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-400">
+                                Paid</div>
+                        </div>
+                        <h4 class="text-white font-bold mb-1 group-hover:text-neon-blue transition">Notion AI</h4>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">Integrated AI assistant inside your
+                            workspace for notes and docs.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Productivity</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 4 -->
+                    <a href="https://www.perplexity.ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-orange-900/20 flex items-center justify-center text-2xl">
+                                🦊</div>
+                            <div
+                                class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-400">
+                                Free</div>
+                        </div>
+                        <h4 class="text-white font-bold mb-1 group-hover:text-orange-400 transition">Perplexity</h4>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">Real-time search engine with citations and
+                            deep research capabilities.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Search</span>
+                            <span class="tag">Research</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Image & Design Grid -->
+            <section id="image" class="mb-12">
+                <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-neon-purple mr-3 shadow-[0_0_8px_#bc13fe]"></span>
+                            Image & Design
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Generators, editors, and vector tools</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Card 1 -->
+                    <a href="https://stability.ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="h-24 w-full rounded-lg bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center mb-3 opacity-80 group-hover:opacity-100 transition">
+                        </div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-white font-bold group-hover:text-neon-purple transition">Stable Diffusion
+                            </h4>
+                            <i class="fa-solid fa-download text-slate-500 text-xs"></i>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">Open source text-to-image model. Run it
+                            locally or in the cloud.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Open Source</span>
+                            <span class="tag">Art</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 2 -->
+                    <a href="https://leonardo.ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="h-24 w-full rounded-lg bg-[url('https://images.unsplash.com/photo-1633158829875-e5316a358c6f?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center mb-3 opacity-80 group-hover:opacity-100 transition">
+                        </div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-white font-bold group-hover:text-neon-purple transition">Leonardo.Ai</h4>
+                            <i class="fa-solid fa-cloud text-slate-500 text-xs"></i>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">Create production-quality visual assets for
+                            your projects with AI.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Game Assets</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 3 -->
+                    <a href="https://firefly.adobe.com" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="h-24 w-full rounded-lg bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center mb-3 opacity-80 group-hover:opacity-100 transition">
+                        </div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-white font-bold group-hover:text-neon-purple transition">Adobe Firefly</h4>
+                            <i class="fa-solid fa-pen-nib text-slate-500 text-xs"></i>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">Generative AI for creators. Integrated into
+                            Photoshop and Illustrator.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Design</span>
+                            <span class="tag">Commercial Safe</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 4 -->
+                    <a href="https://magnific.ai" target="_blank"
+                        class="glass-card p-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="h-24 w-full rounded-lg bg-[url('https://images.unsplash.com/photo-1558655146-d09347e0b7a9?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center mb-3 opacity-80 group-hover:opacity-100 transition">
+                        </div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-white font-bold group-hover:text-neon-purple transition">Magnific AI</h4>
+                            <i class="fa-solid fa-wand-sparkles text-slate-500 text-xs"></i>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2 mb-3">AI upscaler and enhancer that hallucinates
+                            detail into images.</p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="tag">Upscale</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Coding Grid -->
+            <section id="code" class="mb-12">
+                <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-neon-green mr-3 shadow-[0_0_8px_#0aff68]"></span>
+                            Coding & Dev
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Code generation and IDEs</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Tool -->
+                    <a href="https://github.com/features/copilot" target="_blank"
+                        class="glass-card p-4 flex items-center space-x-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="w-12 h-12 rounded bg-black border border-white/10 flex items-center justify-center text-2xl">
+                            <i class="fa-brands fa-github text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-sm group-hover:text-neon-green transition">GitHub
+                                Copilot</h4>
+                            <p class="text-slate-500 text-xs">Your AI pair programmer.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                        </div>
+                    </a>
+
+                    <!-- Tool -->
+                    <a href="https://cursor.sh" target="_blank"
+                        class="glass-card p-4 flex items-center space-x-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="w-12 h-12 rounded bg-black border border-white/10 flex items-center justify-center text-2xl">
+                            <i class="fa-solid fa-terminal text-blue-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-sm group-hover:text-blue-400 transition">Cursor</h4>
+                            <p class="text-slate-500 text-xs">The AI-first Code Editor.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                        </div>
+                    </a>
+
+                    <!-- Tool -->
+                    <a href="https://replit.com" target="_blank"
+                        class="glass-card p-4 flex items-center space-x-4 hover:bg-white/5 cursor-pointer group">
+                        <div
+                            class="w-12 h-12 rounded bg-black border border-white/10 flex items-center justify-center text-2xl">
+                            <i class="fa-solid fa-cube text-yellow-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-sm group-hover:text-yellow-400 transition">Replit</h4>
+                            <p class="text-slate-500 text-xs">Build software collaboratively.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="border-t border-white/5 pt-8 pb-4 text-center">
+                <div class="flex justify-center space-x-6 mb-4">
+                    <a href="#" class="text-slate-500 hover:text-neon-blue transition"><i
+                            class="fa-brands fa-twitter"></i></a>
+                    <a href="#" class="text-slate-500 hover:text-neon-purple transition"><i
+                            class="fa-brands fa-discord"></i></a>
+                    <a href="#" class="text-slate-500 hover:text-neon-green transition"><i
+                            class="fa-brands fa-github"></i></a>
+                </div>
+                <p class="text-slate-600 text-xs">© 2024 Nexus AI Navigation. Designed for the Future.</p>
+            </footer>
+        </div>
+    </main>
+
+    <script>
+        // 简单的平滑滚动处理，适应自定义的 overflow 容器
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            const container = document.getElementById('content-scroll');
+            if (element && container) {
+                // 计算元素在容器内的相对位置
+                const topPos = element.offsetTop - container.offsetTop;
+                container.scrollTo({
+                    top: topPos,
+                    behavior: 'smooth'
+                });
+
+                // 更新侧边栏激活状态
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                event.currentTarget.classList.add('active');
+            }
+        }
+    </script>
+</body>
+
+</html>
