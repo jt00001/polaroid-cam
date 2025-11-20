@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
-    <!-- πÿº¸£∫…Ë÷√ viewport Œ™≤ªø…Àı∑≈£¨«“∏≤∏«¡ı∫£∆¡ -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- iOS PWA ◊® Ù…Ë÷√ -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="∏¥π≈≈ƒ¡¢µ√">
-    
-    <title>∏¥π≈≈ƒ¡¢µ√</title>
+    <meta name="theme-color" content="#f0ece2">
+    <meta name="apple-mobile-web-app-title" content="Â§çÂè§ÊãçÁ´ãÂæó">
+    <link rel="apple-touch-icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d4cdb8%22/><circle cx=%2250%22 cy=%2250%22 r=%2230%22 fill=%22%23333%22/><circle cx=%2250%22 cy=%2250%22 r=%2212%22 fill=%22%23111%22/><circle cx=%2260%22 cy=%2240%22 r=%224%22 fill=%22white%22/></svg>">
+
+    <title>Â§çÂè§ÊãçÁ´ãÂæó Pro</title>
     <style>
-        /* --- »´æ÷…Ë÷√ --- */
-        body, html {
+        /* --- Âü∫Á°ÄÊ†∑Âºè --- */
+        body,
+        html {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -21,13 +24,11 @@
             overflow: hidden;
             background-color: #f0ece2;
             background-image: radial-gradient(#e6e1d3 20%, transparent 20%),
-                              radial-gradient(#e6e1d3 20%, transparent 20%);
-            background-size: 50px 50px;
-            background-position: 0 0, 25px 25px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* Ω˚÷π iOS œ∆§ΩÓπˆ∂Ø–ßπ˚ */
+                radial-gradient(#e6e1d3 20%, transparent 20%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             overscroll-behavior: none;
-            /* Ω˚”√≥§∞¥—°‘Ò */
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
@@ -37,70 +38,81 @@
             width: 100%;
             height: 100%;
             position: relative;
-            /*   ≈‰ iPhone ∞≤»´«¯”Ú */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* --- œ‡ª˙ƒ£–Õ—˘ Ω --- */
+        /* ÂûÉÂúæÊ°∂Âå∫Âüü */
+        #trash-zone {
+            position: fixed;
+            top: -100px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px dashed red;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: top 0.3s;
+            z-index: 500;
+        }
+
+        #trash-zone.visible {
+            top: 20px;
+        }
+
+        #trash-zone::after {
+            content: 'üóëÔ∏è';
+            font-size: 24px;
+        }
+
+        /* --- Áõ∏Êú∫ÁïåÈù¢ --- */
         .camera-wrapper {
             position: fixed;
-            bottom: calc(20px + env(safe-area-inset-bottom)); /* ±‹ø™µ◊≤ø∫·Ãı */
+            bottom: calc(20px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
             touch-action: none;
-            /* “∆∂Ø∂Àƒ¨»œÀı–°“ªµ„ */
-            zoom: 0.85; 
+            zoom: 0.9;
         }
 
         .camera-body {
-            width: 220px;
-            height: 240px;
+            width: 240px;
+            height: 260px;
             background: #d4cdb8;
-            border-radius: 20px;
-            border: 8px solid #5a5243;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 2px 2px 5px rgba(255,255,255,0.2);
+            border-radius: 24px;
+            border: 6px solid #5a5243;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), inset 2px 2px 5px rgba(255, 255, 255, 0.3);
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 30px;
+            padding-top: 25px;
         }
 
         .rainbow-stripe {
             position: absolute;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60%;
-            height: 10px;
+            width: 140px;
+            height: 8px;
             background: linear-gradient(to right, #ff4f4f, #ffed4f, #4fff68, #4f8fff);
-            border-radius: 5px;
+            border-radius: 4px;
         }
 
         .viewfinder-frame {
-            width: 160px;
-            height: 120px;
-            background: #111;
-            border: 5px solid #333;
-            border-radius: 5px;
+            width: 180px;
+            height: 135px;
+            background: #1a1a1a;
+            border: 4px solid #333;
+            border-radius: 6px;
             overflow: hidden;
-            box-shadow: inset 0 0 10px #000;
             position: relative;
-        }
-
-        /* ”√”⁄Ã· æ”√ªßµ„ª˜‘ –Ì…„œÒÕ∑µƒŒƒ◊÷ */
-        .camera-loading-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #666;
-            font-size: 12px;
-            text-align: center;
-            width: 100%;
-            z-index: 0;
+            box-shadow: inset 0 0 15px #000;
         }
 
         #video-preview {
@@ -108,70 +120,150 @@
             height: 100%;
             object-fit: cover;
             transform: scaleX(-1);
-            position: relative;
-            z-index: 1;
+            transition: filter 0.3s;
+        }
+
+        .filter-name {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+            pointer-events: none;
         }
 
         .shutter-btn {
-            width: 60px;
-            height: 60px;
+            pointer-events: auto;
+            width: 70px;
+            height: 70px;
             background-color: #ff4f4f;
             border-radius: 50%;
             border: 4px solid #c23838;
-            position: absolute;
-            bottom: -30px; /* –¸π“‘⁄µ◊≤ø£¨∑Ω±„∞¥ */
-            right: -10px;
             cursor: pointer;
-            box-shadow: 2px 5px 10px rgba(0,0,0,0.3);
+            box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.1s;
-            /* ‘ˆ¥Û¥•√˛«¯”Ú */
-            padding: 0;
-        }
-        .shutter-btn:active {
-            transform: scale(0.9);
+            position: absolute;
+            right: -15px;
+            bottom: 0;
         }
 
-        /* --- ’’∆¨∫Õ∂Øª≠ --- */
+        .shutter-btn:active {
+            transform: scale(0.92);
+        }
+
+        .switch-cam-btn {
+            pointer-events: auto;
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            border: 2px solid #555;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            left: -10px;
+            bottom: 15px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .switch-cam-btn:active {
+            background: #555;
+        }
+
+        /* --- ÁÖßÁâáÊ†∑Âºè --- */
         .slot-container {
             position: absolute;
-            top: -12px; 
+            top: -18px;
             left: 50%;
             transform: translateX(-50%);
-            width: 170px;
+            width: 180px;
             height: 20px;
             z-index: 90;
-            overflow: visible;
+            pointer-events: none;
         }
 
         .polaroid-photo {
             width: 160px;
-            height: 190px;
+            height: 192px;
             background-color: #fffdf5;
-            padding: 15px 15px 40px 15px;
-            box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+            padding: 12px 12px 45px 12px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
             box-sizing: border-box;
             position: absolute;
-            top: 0;
-            left: 5px;
-            transform: translateY(0);
-            transition: transform 3s cubic-bezier(0.25, 1, 0.5, 1); /* ∏¸◊‘»ªµƒµØ≥ˆ«˙œﬂ */
+            top: -9999px;
+            left: 0;
+            transform-origin: center bottom;
             will-change: transform;
             touch-action: none;
         }
-        
+
+        /* ‰∏ãËΩΩÊåâÈíÆÊ†∑Âºè */
+        .download-btn {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: #888;
+            z-index: 20;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .download-btn:active {
+            background: rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+
+        .polaroid-photo.in-slot {
+            top: 0;
+            left: 10px;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
         .polaroid-photo.dragging {
-            box-shadow: 10px 10px 25px rgba(0,0,0,0.5);
-            transition: none; /* Õœ◊ß ±“∆≥˝π˝∂…£¨∏˙ ÷ */
-            z-index: 1000 !important;
+            box-shadow: 15px 15px 40px rgba(0, 0, 0, 0.3);
+            z-index: 9999 !important;
+            transform: scale(1.1) !important;
+            transition: none;
         }
 
         .photo-content {
             width: 100%;
-            height: 130px;
-            background-color: #222;
+            height: 135px;
+            background-color: #111;
             overflow: hidden;
-            /* ≥ı º◊¥Ã¨£∫¥ø∫⁄ªÚπ˝∆ÿ */
-            filter: blur(10px) brightness(0.1) grayscale(1);
+            position: relative;
+            filter: brightness(0.1) grayscale(1) blur(2px);
+            pointer-events: none;
+            /* ËÆ©ÁÇπÂáªÁ©øÈÄèÂà∞ÁÖßÁâáÊú¨Ë∫´ */
+        }
+
+        .photo-content.developed {
+            filter: none !important;
         }
 
         .photo-content img {
@@ -180,227 +272,450 @@
             object-fit: cover;
         }
 
-        /* œ‘”∞∂Øª≠ */
         @keyframes developPhoto {
-            0% { filter: blur(10px) brightness(0.2) grayscale(1); }
-            40% { filter: blur(5px) brightness(0.8) grayscale(0.8) sepia(0.5); }
-            100% { filter: blur(0) brightness(1) grayscale(0) sepia(0); }
+            0% {
+                filter: brightness(0.1) grayscale(1) blur(5px);
+            }
+
+            40% {
+                filter: brightness(0.6) grayscale(0.6) sepia(0.4) blur(2px);
+            }
+
+            100% {
+                filter: brightness(1) grayscale(0) sepia(0) blur(0);
+            }
         }
 
         .developing {
-            animation: developPhoto 6s ease-in-out forwards;
+            animation: developPhoto 4s ease-in-out forwards;
         }
 
-        #canvas-hidden { display: none; }
+        #flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10000;
+            transition: opacity 0.05s;
+        }
 
-        /* »Áπ˚ « iPad ªÚ¥Û∆¡ƒª£¨µ˜’˚≤ºæ÷ */
+        #canvas-hidden {
+            display: none;
+        }
+
         @media (min-width: 768px) {
             .camera-wrapper {
-                left: 100px;
-                bottom: 50px;
+                left: auto;
+                right: 60px;
+                bottom: 60px;
                 transform: none;
-                zoom: 1;
-            }
-            .shutter-btn {
-                bottom: 40px;
-                right: -25px;
+                zoom: 1.2;
             }
         }
     </style>
 </head>
+
 <body>
 
+    <div id="flash-overlay"></div>
+    <div id="trash-zone"></div>
     <div id="photo-wall"></div>
 
     <div class="camera-wrapper">
         <div class="slot-container" id="slot-container"></div>
         <div class="camera-body">
-            <div class="viewfinder-frame">
-                <div class="camera-loading-text">œ‡ª˙∆Ù∂Ø÷–...</div>
+            <div class="viewfinder-frame" id="viewfinder">
+                <div class="filter-name" id="filter-name">Normal</div>
                 <video id="video-preview" autoplay playsinline muted></video>
             </div>
             <div class="rainbow-stripe"></div>
-            <button class="shutter-btn" id="shutter-btn"></button>
+
+            <div class="controls">
+                <div class="switch-cam-btn" id="switch-cam">‚Üª</div>
+                <div class="shutter-btn" id="shutter-btn"></div>
+            </div>
         </div>
     </div>
 
     <canvas id="canvas-hidden"></canvas>
 
     <script>
-        // ∑¿÷πÀ´÷∏Àı∑≈
-        document.addEventListener('touchmove', function(event) {
-            if (event.scale !== 1) { event.preventDefault(); }
-        }, { passive: false });
+        document.addEventListener('touchmove', e => { if (e.scale !== 1) e.preventDefault(); }, { passive: false });
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playShutterSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const t = audioCtx.currentTime;
+            const bufferSize = audioCtx.sampleRate * 0.1;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.5, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+            noise.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            noise.start(t);
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, t);
+            osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+            const oscGain = audioCtx.createGain();
+            oscGain.gain.setValueAtTime(0.3, t);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            osc.connect(oscGain);
+            oscGain.connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + 0.2);
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const videoPreview = document.getElementById('video-preview');
-            const shutterBtn = document.getElementById('shutter-btn');
-            const canvasHidden = document.getElementById('canvas-hidden');
-            const slotContainer = document.getElementById('slot-container');
-            const photoWall = document.getElementById('photo-wall');
-            const ctx = canvasHidden.getContext('2d');
+            const els = {
+                video: document.getElementById('video-preview'),
+                shutter: document.getElementById('shutter-btn'),
+                switchBtn: document.getElementById('switch-cam'),
+                canvas: document.getElementById('canvas-hidden'),
+                slot: document.getElementById('slot-container'),
+                wall: document.getElementById('photo-wall'),
+                flash: document.getElementById('flash-overlay'),
+                trash: document.getElementById('trash-zone'),
+                viewfinder: document.getElementById('viewfinder'),
+                filterName: document.getElementById('filter-name')
+            };
+            const ctx = els.canvas.getContext('2d');
 
-            let zIndexCounter = 200; 
+            let state = {
+                facingMode: 'user',
+                zIndex: 1000,
+                photos: [],
+                currentFilterIndex: 0
+            };
 
-            // 1. ∆Ù∂Ø…„œÒÕ∑ (ºÊ»› iOS)
+            const filters = [
+                { name: 'Normal', css: 'none' },
+                { name: 'Vintage', css: 'sepia(0.4) contrast(1.2) saturate(0.8)' },
+                { name: 'B&W', css: 'grayscale(1) contrast(1.1)' },
+                { name: 'Cool', css: 'hue-rotate(180deg) sepia(0.2) opacity(0.9)' }
+            ];
+
+            loadSavedPhotos();
+            initCamera();
+
             async function initCamera() {
                 try {
-                    // iOS Safari –Ë“™ playsinline ≤≈ƒ‹ƒ⁄¡™≤•∑≈ ”∆µ
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: "user", 
-                            width: { ideal: 720 }, 
-                            height: { ideal: 1280 } 
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: state.facingMode,
+                            width: { ideal: 1280 },
+                            height: { ideal: 1280 }
                         },
                         audio: false
                     });
-                    videoPreview.srcObject = stream;
-                    videoPreview.play(); // »∑±£≤•∑≈
+                    els.video.srcObject = stream;
+                    els.video.onloadedmetadata = () => els.video.play();
+                    els.video.style.transform = state.facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
                 } catch (err) {
-                    console.error("Camera Error:", err);
-                    alert("Œﬁ∑®∆Ù∂Ø…„œÒÕ∑£¨«Î»∑±£‘⁄ Safari ÷–¥Úø™≤¢‘ –Ì»®œﬁ°£");
+                    console.error(err);
+                    alert("Êó†Ê≥ïÂêØÂä®Áõ∏Êú∫ÔºåËØ∑Ê£ÄÊü•ÊùÉÈôê");
                 }
             }
-            initCamera();
 
-            // 2. ≈ƒ’’¬ﬂº≠
-            shutterBtn.addEventListener('click', (e) => {
-                e.preventDefault(); // ∑¿÷π»Œ∫Œƒ¨»œµ„ª˜––Œ™
-                takePhoto();
+            els.switchBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
+                initCamera();
             });
-            // ‘ˆº”¥•√˛÷ß≥÷£¨∑¥”¶∏¸øÏ
-            shutterBtn.addEventListener('touchstart', (e) => {
+
+            els.viewfinder.addEventListener('click', () => {
+                state.currentFilterIndex = (state.currentFilterIndex + 1) % filters.length;
+                applyFilter();
+            });
+
+            function applyFilter() {
+                const filter = filters[state.currentFilterIndex];
+                els.video.style.filter = filter.css;
+                els.filterName.textContent = filter.name;
+                els.filterName.style.opacity = 1;
+                clearTimeout(window.filterTimer);
+                window.filterTimer = setTimeout(() => els.filterName.style.opacity = 0, 2000);
+            }
+
+            const triggerPhoto = (e) => {
                 e.preventDefault();
-                takePhoto();
-            }, {passive: false});
+                els.flash.style.opacity = 0.8;
+                setTimeout(() => els.flash.style.opacity = 0, 100);
+                playShutterSound();
+                capture();
+            };
+            els.shutter.addEventListener('touchstart', triggerPhoto, { passive: false });
+            els.shutter.addEventListener('mousedown', triggerPhoto);
 
-            function takePhoto() {
-                // ºÚµ•µƒøÏ√≈…˘–ßƒ£ƒ‚ (’∂Ø)
-                if (navigator.vibrate) navigator.vibrate(50);
+            function capture() {
+                const w = els.video.videoWidth;
+                const h = els.video.videoHeight;
+                els.canvas.width = w;
+                els.canvas.height = h;
 
-                canvasHidden.width = videoPreview.videoWidth;
-                canvasHidden.height = videoPreview.videoHeight;
-                
-                ctx.translate(canvasHidden.width, 0);
-                ctx.scale(-1, 1);
-                ctx.drawImage(videoPreview, 0, 0, canvasHidden.width, canvasHidden.height);
-                
-                const imageDataURL = canvasHidden.toDataURL('image/jpeg', 0.8);
-                createAndEjectPhoto(imageDataURL);
+                if (state.facingMode === 'user') {
+                    ctx.translate(w, 0);
+                    ctx.scale(-1, 1);
+                }
+
+                ctx.filter = getComputedStyle(els.video).filter;
+                ctx.drawImage(els.video, 0, 0, w, h);
+
+                ctx.filter = 'none';
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+                const date = new Date();
+                const yy = date.getFullYear().toString().substr(2);
+                const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+                const dd = date.getDate().toString().padStart(2, '0');
+                const dateStr = `'${yy} ${mm} ${dd}`;
+
+                const fontSize = h / 20;
+                ctx.font = `bold ${fontSize}px "Courier New", monospace`;
+                ctx.fillStyle = '#ffaa00';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 2;
+                ctx.textAlign = 'right';
+                ctx.fillText(dateStr, w - (w * 0.05), h - (h * 0.05));
+
+                const imgData = els.canvas.toDataURL('image/jpeg', 0.85);
+                createPhotoElement(imgData, true);
             }
 
-            // 3. …˙≥…’’∆¨
-            function createAndEjectPhoto(imgUrl) {
-                const photoDiv = document.createElement('div');
-                photoDiv.classList.add('polaroid-photo');
-                
-                // ÀÊª˙Œ¢–°µƒ–˝◊™Ω«∂»£¨‘ˆº”◊‘»ª∏–
-                const randomAngle = (Math.random() - 0.5) * 6; 
-                
-                const contentDiv = document.createElement('div');
-                contentDiv.classList.add('photo-content');
-                
+            // --- Êñ∞Â¢ûÔºöÂêàÊàêÂπ∂‰∏ãËΩΩÂõæÁâá ---
+            function downloadPolaroid(imgData) {
+                const tempCanvas = document.createElement('canvas');
+                const tCtx = tempCanvas.getContext('2d');
+                const img = new Image();
+
+                img.onload = () => {
+                    // ÊåâÁÖßÁïåÈù¢ CSS ÊØî‰æãËÆ°ÁÆóÂ∞∫ÂØ∏ (160px ÂÆΩ, 12px ËæπË∑ù, 45px Â∫ïÈÉ®)
+                    // ËÆ°ÁÆóÊØî‰æã: photoWidth = 160 - 24 = 136. 
+                    // Scale factor = img.width / 136.
+                    // ÁÆÄÂåñ: Êàë‰ª¨ÁªôÂõæÁâáÂä†ËæπÊ°ÜÔºåËæπÊ°ÜÂÆΩÂ∫¶Á∫¶‰∏∫ÂõæÁâáÂÆΩÂ∫¶ÁöÑ 0.088 ÂÄç
+
+                    const photoW = img.width;
+                    const photoH = img.height;
+
+                    // Ê†πÊçÆ CSS padding ËÆ°ÁÆóÁõ∏ÂØπÊØî‰æã
+                    // padding-left/right: 12px (ÂΩìÂõæÁâáÂÜÖÂÆπÂÆΩ 136px Êó∂) -> 12/136 ‚âà 0.088
+                    // padding-top: 12px -> 0.088
+                    // padding-bottom: 45px -> 45/136 ‚âà 0.33
+
+                    const margin = photoW * 0.088;
+                    const bottomMargin = photoW * 0.33;
+
+                    const finalW = photoW + (margin * 2);
+                    const finalH = photoH + margin + bottomMargin;
+
+                    tempCanvas.width = finalW;
+                    tempCanvas.height = finalH;
+
+                    // 1. ÁîªÊãçÁ´ãÂæóÁôΩÁ∫∏
+                    tCtx.fillStyle = '#fffdf5';
+                    tCtx.fillRect(0, 0, finalW, finalH);
+
+                    // 2. ÁîªÁÖßÁâáÂÜÖÂÆπ
+                    tCtx.drawImage(img, margin, margin, photoW, photoH);
+
+                    // 3. ÂØºÂá∫
+                    const finalUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+
+                    // 4. Ëß¶Âèë‰∏ãËΩΩ
+                    const link = document.createElement('a');
+                    link.download = `polaroid_${Date.now()}.jpg`;
+                    link.href = finalUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                img.src = imgData;
+            }
+
+            function createPhotoElement(imgData, isNew = false, savedProps = null) {
+                const id = savedProps ? savedProps.id : Date.now();
+                const rotation = savedProps ? savedProps.rotation : (Math.random() - 0.5) * 10;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'polaroid-photo';
+                wrapper.id = 'photo-' + id;
+
+                const content = document.createElement('div');
+                content.className = 'photo-content';
+                if (!isNew) content.classList.add('developed');
+
                 const img = document.createElement('img');
-                img.src = imgUrl;
+                img.src = imgData;
 
-                contentDiv.appendChild(img);
-                photoDiv.appendChild(contentDiv);
-                slotContainer.appendChild(photoDiv);
+                // --- Êñ∞Â¢ûÔºö‰∏ãËΩΩÊåâÈíÆ ---
+                const downloadBtn = document.createElement('div');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.innerHTML = '‚¨á'; // ÁÆÄÂçïÂõæÊ†á
 
-                // ∂Øª≠–Ú¡–
-                requestAnimationFrame(() => {
-                    // µØ≥ˆ∂Øª≠
-                    photoDiv.style.transform = `translateY(-240px) rotate(${randomAngle}deg)`;
-                    
-                    // œ‘”∞
-                    setTimeout(() => {
-                        contentDiv.classList.add('developing');
-                    }, 500);
+                // ÁÇπÂáª‰∏ãËΩΩÈÄªËæë (ÈòªÊ≠¢ÂÜíÊ≥°ÔºåÈÅøÂÖçËß¶ÂèëÊãñÊãΩ)
+                const handleDownload = (e) => {
+                    e.stopPropagation(); // ÂÖ≥ÈîÆÔºöÈò≤Ê≠¢Ëß¶ÂèëÊãñÊãΩ
+                    downloadPolaroid(imgData);
+                };
 
-                    // ‘ –ÌÕœ◊ß
-                    setTimeout(() => {
-                        enableDrag(photoDiv);
-                    }, 3000);
-                });
+                downloadBtn.addEventListener('mousedown', handleDownload);
+                downloadBtn.addEventListener('touchstart', handleDownload, { passive: false });
+
+                content.appendChild(img);
+                wrapper.appendChild(content);
+                wrapper.appendChild(downloadBtn); // ÊåâÈíÆÂä†Âú® wrapper ÈáåÔºåcontent ‰∏ãÈù¢
+
+                if (isNew) {
+                    els.slot.appendChild(wrapper);
+                    wrapper.getBoundingClientRect();
+
+                    requestAnimationFrame(() => {
+                        wrapper.classList.add('in-slot');
+                        wrapper.style.transform = `translateY(-260px) rotate(${rotation}deg)`;
+                        setTimeout(() => content.classList.add('developing'), 500);
+                        setTimeout(() => {
+                            moveToWall(wrapper, id, rotation, imgData);
+                        }, 1000);
+                    });
+                } else {
+                    els.wall.appendChild(wrapper);
+                    wrapper.style.left = savedProps.x;
+                    wrapper.style.top = savedProps.y;
+                    wrapper.style.transform = `rotate(${savedProps.rotation}deg)`;
+                    enableDrag(wrapper, id);
+                }
             }
 
-            // 4. Õœ◊ß¬ﬂº≠ (÷˜“™”≈ªØ Touch  ¬º˛)
-            function enableDrag(element) {
+            function moveToWall(el, id, rotation, imgData) {
+                const rect = el.getBoundingClientRect();
+                els.wall.appendChild(el);
+                el.classList.remove('in-slot');
+                el.style.position = 'absolute';
+                el.style.left = rect.left + 'px';
+                el.style.top = rect.top + 'px';
+                el.style.transform = `rotate(${rotation}deg)`;
+
+                const photoData = {
+                    id: id,
+                    x: rect.left + 'px',
+                    y: rect.top + 'px',
+                    rotation: rotation,
+                    imgData: imgData
+                };
+                state.photos.push(photoData);
+                saveToStorage();
+
+                enableDrag(el, id);
+            }
+
+            function enableDrag(el, id) {
                 let isDragging = false;
-                let startX, startY, initialLeft, initialTop;
+                let startX, startY, startLeft, startTop;
 
-                function onTouchStart(e) {
-                    // “∆∂ØµΩ’’∆¨«Ω»›∆˜£®»Áπ˚‘⁄≤€Œª¿Ô£©
-                    if (element.parentNode === slotContainer) {
-                        const rect = element.getBoundingClientRect();
-                        photoWall.appendChild(element);
-                        element.style.position = 'absolute';
-                        element.style.left = rect.left + 'px';
-                        element.style.top = rect.top + 'px';
-                        element.style.transform = element.style.transform.replace('translateY(-240px)', ''); // “∆≥˝µØ≥ˆµƒ transform
-                    }
+                const onStart = (e) => {
+                    // Â¶ÇÊûúÁÇπÁöÑÊòØ‰∏ãËΩΩÊåâÈíÆÔºå‰∏çÊãñÊãΩ
+                    if (e.target.classList.contains('download-btn')) return;
 
-                    zIndexCounter++;
-                    element.style.zIndex = zIndexCounter;
-                    element.classList.add('dragging');
+                    state.zIndex++;
+                    el.style.zIndex = state.zIndex;
+                    el.classList.add('dragging');
+                    els.trash.classList.add('visible');
 
-                    const touch = e.touches[0];
-                    startX = touch.clientX;
-                    startY = touch.clientY;
-                    initialLeft = parseFloat(element.style.left || 0);
-                    initialTop = parseFloat(element.style.top || 0);
-                    
+                    const t = e.touches ? e.touches[0] : e;
+                    startX = t.clientX;
+                    startY = t.clientY;
+                    startLeft = parseFloat(el.style.left);
+                    startTop = parseFloat(el.style.top);
                     isDragging = true;
-                }
+                };
 
-                function onTouchMove(e) {
+                const onMove = (e) => {
                     if (!isDragging) return;
-                    e.preventDefault(); // πÿº¸£∫∑¿÷π∆¡ƒªπˆ∂Ø
+                    if (e.cancelable) e.preventDefault();
 
-                    const touch = e.touches[0];
-                    const dx = touch.clientX - startX;
-                    const dy = touch.clientY - startY;
+                    const t = e.touches ? e.touches[0] : e;
+                    const dx = t.clientX - startX;
+                    const dy = t.clientY - startY;
 
-                    element.style.left = `${initialLeft + dx}px`;
-                    element.style.top = `${initialTop + dy}px`;
-                }
+                    el.style.left = (startLeft + dx) + 'px';
+                    el.style.top = (startTop + dy) + 'px';
 
-                function onTouchEnd() {
-                    isDragging = false;
-                    element.classList.remove('dragging');
-                }
-
-                // ∞Û∂® Touch  ¬º˛
-                element.addEventListener('touchstart', onTouchStart, { passive: false });
-                element.addEventListener('touchmove', onTouchMove, { passive: false });
-                element.addEventListener('touchend', onTouchEnd);
-
-                // ºÚµ•µƒ Û±Í÷ß≥÷ (PC∂Àµ˜ ‘”√)
-                element.addEventListener('mousedown', (e) => {
-                    if(element.parentNode === slotContainer) {
-                         const rect = element.getBoundingClientRect();
-                         photoWall.appendChild(element);
-                         element.style.position = 'absolute';
-                         element.style.left = rect.left + 'px';
-                         element.style.top = rect.top + 'px';
-                         element.style.transform = 'rotate(0deg)';
+                    const trashRect = els.trash.getBoundingClientRect();
+                    if (t.clientX > trashRect.left && t.clientY < trashRect.bottom) {
+                        els.trash.style.transform = "scale(1.2)";
+                    } else {
+                        els.trash.style.transform = "scale(1)";
                     }
-                    zIndexCounter++;
-                    element.style.zIndex = zIndexCounter;
-                    
-                    const onMouseMove = (moveEvent) => {
-                        element.style.left = (parseFloat(element.style.left) + moveEvent.movementX) + 'px';
-                        element.style.top = (parseFloat(element.style.top) + moveEvent.movementY) + 'px';
-                    };
-                    const onMouseUp = () => {
-                        document.removeEventListener('mousemove', onMouseMove);
-                        document.removeEventListener('mouseup', onMouseUp);
-                    };
-                    document.addEventListener('mousemove', onMouseMove);
-                    document.addEventListener('mouseup', onMouseUp);
-                });
+                };
+
+                const onEnd = (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    el.classList.remove('dragging');
+                    els.trash.classList.remove('visible');
+
+                    const t = e.changedTouches ? e.changedTouches[0] : e;
+                    const trashRect = els.trash.getBoundingClientRect();
+                    if (t.clientX > trashRect.left && t.clientY < trashRect.bottom) {
+                        el.remove();
+                        state.photos = state.photos.filter(p => p.id !== id);
+                        saveToStorage();
+                        if (navigator.vibrate) navigator.vibrate(100);
+                    } else {
+                        const p = state.photos.find(p => p.id === id);
+                        if (p) {
+                            p.x = el.style.left;
+                            p.y = el.style.top;
+                            saveToStorage();
+                        }
+                    }
+                };
+
+                el.addEventListener('touchstart', onStart, { passive: false });
+                el.addEventListener('touchmove', onMove, { passive: false });
+                el.addEventListener('touchend', onEnd);
+
+                el.addEventListener('mousedown', onStart);
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+            }
+
+            function saveToStorage() {
+                try {
+                    if (state.photos.length > 15) {
+                        state.photos = state.photos.slice(state.photos.length - 15);
+                    }
+                    localStorage.setItem('polaroid_photos_v2', JSON.stringify(state.photos));
+                } catch (e) {
+                    console.log("Storage full or error");
+                }
+            }
+
+            function loadSavedPhotos() {
+                const data = localStorage.getItem('polaroid_photos_v2');
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        state.photos = parsed;
+                        parsed.forEach(p => {
+                            createPhotoElement(p.imgData, false, p);
+                        });
+                    } catch (e) {
+                        console.error("Load error", e);
+                    }
+                }
             }
         });
     </script>
 </body>
+
 </html>
