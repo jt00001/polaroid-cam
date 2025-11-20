@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Battle City 3D: Toy Wars</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #2c3e50; }
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="info">WASD移动 | 空格射击 | 击碎橙色砖块</div>
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- 1. 场景初始化 (Setup Scene) ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x333333); // 深灰色桌面背景
+
+        // 使用正交相机 (Orthographic Camera) 制造“微缩模型”感
+        const aspect = window.innerWidth / window.innerHeight;
+        const d = 20;
+        const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+        
+        // 设置相机位置：经典的上帝斜视角
+        camera.position.set(20, 20, 20); 
+        camera.lookAt(scene.position);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // 开启阴影
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // --- 2. 灯光与氛围 (Lighting) ---
+        // 模拟台灯光源
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(10, 20, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+
+        // --- 3. 材质库 (Materials - Toy Style) ---
+        // 这种 MeshStandardMaterial 会让物体看起来像有光泽的塑料
+        const matGreenPlastic = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.3, metalness: 0.1 });
+        const matRedPlastic = new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.3, metalness: 0.1 });
+        const matBrick = new THREE.MeshStandardMaterial({ color: 0xd35400, roughness: 0.8 }); // 粗糙的砖块
+        const matSteel = new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.2, metalness: 0.8 }); // 金属
+        const matFloor = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+        const matBullet = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0x444400 });
+
+        // --- 4. 游戏对象构建 (Game Objects) ---
+        
+        const TILE_SIZE = 2;
+        const objects = []; // 碰撞体列表
+        const bullets = [];
+        const enemies = [];
+        let player;
+        
+        // 地图数据：0空地, 1红砖, 2钢板, 9基地
+        // 这是一个简化的13x13地图
+        const mapData = [
+            [0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,1,1,1,0,1,1,1,0,1,1,1,0],
+            [0,1,0,1,0,1,2,1,0,1,0,1,0],
+            [0,1,1,1,0,1,1,1,0,1,1,1,0],
+            [0,1,0,0,0,0,0,0,0,0,0,1,0],
+            [0,1,0,1,1,2,2,2,1,1,0,1,0],
+            [0,0,0,1,0,0,0,0,0,1,0,0,0],
+            [0,1,0,1,1,2,2,2,1,1,0,1,0],
+            [0,1,0,0,0,0,0,0,0,0,0,1,0],
+            [0,1,1,1,0,1,1,1,0,1,1,1,0],
+            [0,0,0,0,0,1,0,1,0,0,0,0,0],
+            [0,0,0,0,0,1,9,1,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0],
+        ];
+
+        // 创建地面
+        const floorGeo = new THREE.PlaneGeometry(40, 40);
+        const floor = new THREE.Mesh(floorGeo, matFloor);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.5;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // 坦克制造工厂函数
+        function createTank(colorMat, x, z) {
+            const tankGroup = new THREE.Group();
+            
+            // 车身
+            const bodyGeo = new THREE.BoxGeometry(1.6, 0.8, 1.6);
+            const body = new THREE.Mesh(bodyGeo, colorMat);
+            body.position.y = 0.4;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            tankGroup.add(body);
+
+            // 炮塔
+            const turretGeo = new THREE.BoxGeometry(1, 0.6, 1);
+            const turret = new THREE.Mesh(turretGeo, colorMat);
+            turret.position.y = 1.0;
+            turret.castShadow = true;
+            tankGroup.add(turret);
+
+            // 炮管
+            const barrelGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.2);
+            const barrel = new THREE.Mesh(barrelGeo, colorMat);
+            barrel.rotation.x = Math.PI / 2; // 放平
+            barrel.position.y = 1.0;
+            barrel.position.z = 0.8; 
+            tankGroup.add(barrel);
+
+            tankGroup.position.set(x, 0, z);
+            scene.add(tankGroup);
+            return tankGroup;
+        }
+
+        // 生成地图
+        function initMap() {
+            const offsetX = -12;
+            const offsetZ = -12;
+
+            for(let r=0; r<mapData.length; r++){
+                for(let c=0; c<mapData[r].length; c++){
+                    const type = mapData[r][c];
+                    const x = c * TILE_SIZE + offsetX;
+                    const z = r * TILE_SIZE + offsetZ;
+
+                    if(type === 1 || type === 2 || type === 9) {
+                        let mat = type === 1 ? matBrick : (type === 9 ? matRedPlastic : matSteel);
+                        let geo = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE/2, TILE_SIZE); // 砖块矮一点，更有玩具感
+                        if (type === 9) { // 基地是个特殊的方块
+                            geo = new THREE.BoxGeometry(1, 1, 1);
+                            mat = new THREE.MeshStandardMaterial({color: 0x3498db, emissive:0x1111ff});
+                        }
+                        
+                        const cube = new THREE.Mesh(geo, mat);
+                        cube.position.set(x, TILE_SIZE/4, z);
+                        cube.castShadow = true;
+                        cube.receiveShadow = true;
+                        
+                        // 添加类型标记
+                        cube.userData = { type: type, hit: false }; 
+                        scene.add(cube);
+                        objects.push(cube);
+                    }
+                }
+            }
+        }
+
+        // 初始化玩家和敌人
+        player = createTank(matGreenPlastic, -4, 10); // 玩家出生在左下
+        player.userData = { tag: 'player', cooldown: 0, dir: new THREE.Vector3(0,0,-1) };
+
+        // 创建几个简单的AI敌人
+        enemies.push(createTank(matRedPlastic, -10, -12));
+        enemies.push(createTank(matRedPlastic, 0, -12));
+        enemies.push(createTank(matRedPlastic, 10, -12));
+        enemies.forEach(e => {
+            e.userData = { tag: 'enemy', cooldown: 0, dir: new THREE.Vector3(0,0,1), moveTime: 0 };
+            objects.push(e.children[0]); // 将敌人的车身加入碰撞检测
+        });
+
+        initMap();
+
+        // --- 5. 游戏逻辑 (Game Logic) ---
+
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.code] = true);
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+        function checkCollision(position) {
+            // 简单的边界检查
+            if (position.x > 14 || position.x < -14 || position.z > 14 || position.z < -14) return true;
+
+            // 简单的物体距离检查
+            const playerBox = new THREE.Box3().setFromCenterAndSize(position, new THREE.Vector3(1.4, 1, 1.4));
+            
+            for (let obj of objects) {
+                if (!obj.parent) continue; // 已被销毁
+                const objBox = new THREE.Box3().setFromObject(obj);
+                if (playerBox.intersectsBox(objBox)) return true;
+            }
+            return false;
+        }
+
+        function shoot(shooter, isPlayer) {
+            if (shooter.userData.cooldown > 0) return;
+            
+            const bulletGeo = new THREE.SphereGeometry(0.2);
+            const bullet = new THREE.Mesh(bulletGeo, matBullet);
+            
+            bullet.position.copy(shooter.position);
+            bullet.position.y = 1.0;
+            // 子弹稍微往前一点，避免撞到自己
+            bullet.position.add(shooter.userData.dir.clone().multiplyScalar(1.0)); 
+            
+            bullet.userData = { dir: shooter.userData.dir.clone(), isPlayer: isPlayer };
+            scene.add(bullet);
+            bullets.push(bullet);
+            
+            shooter.userData.cooldown = 30; // 射击冷却
+        }
+
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                b.position.add(b.userData.dir.clone().multiplyScalar(0.4)); // 子弹速度
+
+                let hit = false;
+                
+                // 检查子弹撞墙
+                for (let j = objects.length - 1; j >= 0; j--) {
+                    const obj = objects[j];
+                    const dist = b.position.distanceTo(obj.position);
+                    if (dist < 1.2) { // 简单的命中判定
+                        hit = true;
+                        if (obj.userData.type === 1) { // 打碎砖块
+                             scene.remove(obj);
+                             objects.splice(j, 1);
+                        } else if (obj.userData.type === 9) { // 打爆基地
+                             alert("Game Over! Base Destroyed!");
+                             location.reload();
+                        }
+                        // 钢板(type 2)只阻挡不销毁
+                        break; 
+                    }
+                }
+
+                // 检查子弹打人
+                if (!hit) {
+                    // 玩家打敌人
+                    if (b.userData.isPlayer) {
+                        for (let k = enemies.length - 1; k >= 0; k--) {
+                            const e = enemies[k];
+                            if (b.position.distanceTo(e.position) < 1.5) {
+                                scene.remove(e);
+                                enemies.splice(k, 1);
+                                hit = true;
+                                break;
+                            }
+                        }
+                    } 
+                    // 敌人打玩家
+                    else {
+                        if (b.position.distanceTo(player.position) < 1.5) {
+                            alert("You Died!");
+                            location.reload();
+                            hit = true;
+                        }
+                    }
+                }
+
+                // 飞出边界或命中
+                if (hit || b.position.x > 20 || b.position.x < -20 || b.position.z > 20 || b.position.z < -20) {
+                    scene.remove(b);
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        function updateEnemies() {
+            enemies.forEach(e => {
+                if (e.userData.cooldown > 0) e.userData.cooldown--;
+
+                // AI 简单逻辑：随机移动
+                if (e.userData.moveTime <= 0) {
+                    const r = Math.random();
+                    if (r < 0.25) e.userData.dir.set(0, 0, -1); // 上
+                    else if (r < 0.5) e.userData.dir.set(0, 0, 1); // 下
+                    else if (r < 0.75) e.userData.dir.set(-1, 0, 0); // 左
+                    else e.userData.dir.set(1, 0, 0); // 右
+                    
+                    // 旋转模型朝向
+                    e.rotation.y = Math.atan2(e.userData.dir.x, e.userData.dir.z);
+                    e.userData.moveTime = 60 + Math.random() * 60;
+                } else {
+                    e.userData.moveTime--;
+                }
+
+                // 移动预判
+                const nextPos = e.position.clone().add(e.userData.dir.clone().multiplyScalar(0.05));
+                // 简单的AI避障：如果撞墙就反向
+                if (!checkCollision(nextPos)) {
+                    e.position.copy(nextPos);
+                } else {
+                    e.userData.moveTime = 0; // 立即换方向
+                }
+
+                // 随机射击
+                if (Math.random() < 0.02) shoot(e, false);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // --- 玩家控制 ---
+            const speed = 0.1;
+            let moved = false;
+            const nextPos = player.position.clone();
+
+            if (keys['KeyW'] || keys['ArrowUp']) { 
+                nextPos.z -= speed; player.rotation.y = Math.PI; player.userData.dir.set(0,0,-1); moved = true; 
+            }
+            else if (keys['KeyS'] || keys['ArrowDown']) { 
+                nextPos.z += speed; player.rotation.y = 0; player.userData.dir.set(0,0,1); moved = true; 
+            }
+            else if (keys['KeyA'] || keys['ArrowLeft']) { 
+                nextPos.x -= speed; player.rotation.y = Math.PI/2; player.userData.dir.set(-1,0,0); moved = true; 
+            }
+            else if (keys['KeyD'] || keys['ArrowRight']) { 
+                nextPos.x += speed; player.rotation.y = -Math.PI/2; player.userData.dir.set(1,0,0); moved = true; 
+            }
+
+            if (moved && !checkCollision(nextPos)) {
+                player.position.copy(nextPos);
+            }
+
+            if (keys['Space']) {
+                shoot(player, true);
+            }
+            if (player.userData.cooldown > 0) player.userData.cooldown--;
+
+            // --- 更新逻辑 ---
+            updateBullets();
+            updateEnemies();
+
+            renderer.render(scene, camera);
+        }
+
+        // 开始循环
+        animate();
+
+        // 窗口大小调整
+        window.addEventListener('resize', () => {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.left = -d * aspect;
+            camera.right = d * aspect;
+            camera.top = d;
+            camera.bottom = -d;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

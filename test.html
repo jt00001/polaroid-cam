@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式SVG电风扇 (四扇叶版)</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #f5f5f5, #cfd8dc);
+            margin: 0;
+            font-family: "Microsoft YaHei", sans-serif; /* 防止字体乱码 */
+            overflow: hidden;
+        }
+
+        .fan-container {
+            width: 400px;
+            height: 600px;
+            position: relative;
+        }
+
+        .fan-svg {
+            filter: drop-shadow(0px 15px 10px rgba(0,0,0,0.2));
+        }
+
+        /* === 风扇部件样式 === */
+        .base { fill: #1b5e20; stroke: #003300; stroke-width: 2px; }
+        .base-top { fill: #4caf50; stroke: #2e7d32; stroke-width: 1px; }
+        
+        .pillar { 
+            fill: url(#metalGradient); 
+            stroke: #607d8b; 
+            stroke-width: 1px; 
+        }
+
+        /* 网罩 */
+        .guard {
+            stroke: #546e7a;
+            stroke-width: 2px;
+            fill: none;
+        }
+        
+        /* 扇叶组 */
+        #bladeGroup {
+            transform-origin: 200px 200px;
+            /* 初始状态：静止 */
+        }
+
+        .blade {
+            fill: rgba(255, 255, 255, 0.9);
+            stroke: #b0bec5;
+            stroke-width: 1px;
+        }
+
+        /* 控制面板区域 */
+        .panel-bg { fill: #3e2723; }
+        
+        /* 按钮样式 */
+        .btn {
+            cursor: pointer;
+            stroke: rgba(0,0,0,0.3);
+            stroke-width: 1px;
+            transition: fill 0.2s, filter 0.2s;
+        }
+        
+        .btn:hover {
+            filter: brightness(1.2);
+        }
+
+        /* 按钮状态颜色 */
+        #btn-off { fill: #d32f2f; } /* 红 */
+        #btn-low { fill: #ffca28; } /* 黄 */
+        #btn-high { fill: #ffb300; } /* 深黄 */
+
+        /* 激活状态（看起来发亮） */
+        .btn.active {
+            stroke: #fff;
+            stroke-width: 2px;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+        }
+
+        /* === 定义动画 === */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 功能类：控制速度 */
+        .spin-slow {
+            animation: spin 1.2s linear infinite;
+        }
+        .spin-fast {
+            animation: spin 0.2s linear infinite; /* 细节：高速模糊 */
+        }
+        /* 高速时让扇叶稍微模糊一点，增加逼真感 */
+        .spin-fast .blade {
+            filter: blur(1px); 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="fan-container">
+        <svg viewBox="0 0 400 600" class="fan-svg">
+            <defs>
+                <linearGradient id="metalGradient" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stop-color="#90a4ae"/>
+                    <stop offset="50%" stop-color="#cfd8dc"/>
+                    <stop offset="100%" stop-color="#78909c"/>
+                </linearGradient>
+            </defs>
+
+            <path d="M100 560 Q100 580 120 580 L280 580 Q300 580 300 560 L280 540 L120 540 Z" class="base"/>
+            <rect x="130" y="530" width="140" height="20" rx="5" class="base-top"/>
+
+            <rect x="185" y="280" width="30" height="260" class="pillar"/>
+            
+            <rect x="180" y="340" width="40" height="80" rx="5" class="panel-bg"/>
+            
+            <circle id="btn-off" class="btn active" cx="200" cy="360" r="8" onclick="setSpeed('off')"/>
+            <circle id="btn-low" class="btn" cx="200" cy="385" r="8" onclick="setSpeed('low')"/>
+            <circle id="btn-high" class="btn" cx="200" cy="410" r="8" onclick="setSpeed('high')"/>
+
+            <path d="M180 280 L220 280 L210 240 L190 240 Z" fill="#546e7a"/>
+
+            <circle cx="200" cy="200" r="120" class="guard" opacity="0.5"/>
+            <g stroke="#b0bec5" stroke-width="1">
+                <line x1="200" y1="80" x2="200" y2="320"/>
+                <line x1="80" y1="200" x2="320" y2="200"/>
+                <line x1="115" y1="115" x2="285" y2="285"/>
+                <line x1="285" y1="115" x2="115" y2="285"/>
+            </g>
+
+            <g id="bladeGroup">
+                <path d="M200 200 Q240 100, 300 140 Q280 200, 200 200" class="blade"/>
+                <path d="M200 200 Q280 240, 260 300 Q200 280, 200 200" class="blade"/>
+                <path d="M200 200 Q160 300, 100 260 Q120 200, 200 200" class="blade"/>
+                <path d="M200 200 Q120 160, 140 100 Q200 120, 200 200" class="blade"/>
+                
+                <circle cx="200" cy="200" r="20" fill="url(#metalGradient)" stroke="#546e7a"/>
+            </g>
+
+            <circle cx="200" cy="200" r="120" class="guard"/>
+            <circle cx="200" cy="200" r="40" class="guard"/>
+            <circle cx="200" cy="200" r="80" class="guard" opacity="0.3"/>
+
+        </svg>
+    </div>
+
+    <script>
+        const bladeGroup = document.getElementById('bladeGroup');
+        const btnOff = document.getElementById('btn-off');
+        const btnLow = document.getElementById('btn-low');
+        const btnHigh = document.getElementById('btn-high');
+
+        function setSpeed(speed) {
+            btnOff.classList.remove('active');
+            btnLow.classList.remove('active');
+            btnHigh.classList.remove('active');
+
+            bladeGroup.classList.remove('spin-slow');
+            bladeGroup.classList.remove('spin-fast');
+            bladeGroup.style.animationPlayState = 'paused'; // 默认暂停，如果需要再运行
+
+            if (speed === 'off') {
+                btnOff.classList.add('active');
+            } else if (speed === 'low') {
+                btnLow.classList.add('active');
+                bladeGroup.style.animationPlayState = 'running';
+                bladeGroup.classList.add('spin-slow');
+            } else if (speed === 'high') {
+                btnHigh.classList.add('active');
+                bladeGroup.style.animationPlayState = 'running';
+                bladeGroup.classList.add('spin-fast');
+            }
+        }
+
+        // 页面加载后默认选中停止按钮
+        document.addEventListener('DOMContentLoaded', () => {
+            setSpeed('off'); 
+        });
+    </script>
+</body>
+</html>
